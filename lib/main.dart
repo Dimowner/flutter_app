@@ -13,12 +13,16 @@ class SW extends StatefulWidget{@override St createState()=>St();}
 
 class St extends State<SW> {
   final controller = PageController(initialPage: 0);
-  static const LatLng center = const LatLng(45.521563, -122.677433);
-  List<Note> items;
+  LatLng center = const LatLng(45.521563, -122.677433);
+  List<Loc> items;
   StreamSubscription<Event> subsc;
   final ref=FirebaseDatabase.instance.reference().child('r');
   final StorageReference stor=FirebaseStorage.instance.ref();
   TextEditingController tCntr;
+  double lt,ln;
+  int id=1;
+  Map<MarkerId, Marker>markers=<MarkerId,Marker>{};
+  GoogleMapController ct;
 
   @override void initState() {
     super.initState();
@@ -28,11 +32,19 @@ class St extends State<SW> {
   }
 
   Future _getImg() async {
-    var l = await Location().getLocation();
     var i = await ImagePicker.pickImage(source: ImageSource.camera);
     if (i != null) {
-      _checkIn((await(await stor.child(Random().nextInt(100000).toString()+".jpeg").putFile(i,StorageMetadata(contentType:"image/jpeg")).onComplete).ref.getDownloadURL()),l["latitude"],l["longitude"]);
+      _checkIn((await(await stor.child(Random().nextInt(100000).toString()+".jpeg")
+          .putFile(i,StorageMetadata(contentType:"image/jpeg")).onComplete).ref.getDownloadURL()),lt,ln);
     }
+  }
+
+  Future _getLoc() async {
+    var l = await Location().getLocation();
+    lt=l["latitude"];ln=l["longitude"];
+    setState((){markers.clear();markers[MarkerId("id$id")] = Marker(markerId:MarkerId("id$id"),position:LatLng(lt,ln));});
+    id++;
+    ct.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(zoom:12,target:LatLng(lt,ln))));
   }
 
   @override void dispose() {
@@ -41,61 +53,76 @@ class St extends State<SW> {
   }
 
   @override Widget build(BuildContext context) {
-    return MaterialApp(home: Scaffold(body: PageView(controller: controller, scrollDirection: Axis.horizontal, children: <Widget>[_buildPage0(true), _buildList(context),],)));
+    return MaterialApp(home: Scaffold(appBar:AppBar(title:Text('Checkinner')),
+        body: PageView(controller: controller, scrollDirection: Axis.horizontal, children: <Widget>[ _buildList2(context), ],)));
   }
 
-  Widget _buildPage0(bool left) {
+  Widget _buildMap(int pos) {
+    var ll = center;
+    if (pos>=0) {ll = LatLng(items[pos].lat, items[pos].lng); markers[MarkerId("id$id")] = Marker(markerId: MarkerId("id$id"), position: ll); }
+    id++;
+    return GoogleMap(scrollGesturesEnabled:true,zoomGesturesEnabled:true, onMapCreated: (c) {ct = c;},
+        markers: Set<Marker>.of(markers.values), initialCameraPosition:CameraPosition(target:ll,zoom:12.0));
+  }
+
+  Widget _buildList2(BuildContext context) {
     return Scaffold(
-        body: _buildMap(),
-        floatingActionButton:Stack(children: [
-          Container(
-            margin:EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-            child: RawMaterialButton(
-              fillColor: Colors.yellow,
-              splashColor: Colors.yellowAccent,
-              child: Padding(padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 12.0,),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[SizedBox(width: 68.0), Icon(Icons.arrow_forward,)])),
-              onPressed: _doAct,
-              shape: const StadiumBorder(),
-            ),),
-          FloatingActionButton(backgroundColor: Colors.blue, child: Icon(Icons.location_on,), onPressed: _getImg,),
-        ]),
-        floatingActionButtonLocation: left ? FloatingActionButtonLocation.endFloat: FloatingActionButtonLocation.centerFloat
-    );
-  }
-
-  Widget _buildMap() {return GoogleMap(onMapCreated:_onMapCreated,initialCameraPosition:CameraPosition(target:center,zoom:11.0));}
-
-  void _onMapCreated(GoogleMapController controller) {
-//    _controller2.complete(controller);
-  }
-
-  void _doAct() {controller.animateToPage(1,duration:Duration(milliseconds:250),curve:Curves.ease);}
-
-  Widget _buildList(BuildContext context) {
-    return Center(
-      child:ListView.builder(
+      body:ListView.builder(
           itemCount:items.length,
-//          padding:const EdgeInsets.all(16),
-          itemBuilder:(context, position) {
-            return Column(
-              children:<Widget>[
-                Divider(height: 12),
-                ListTile(
-                  leading:CircleAvatar(radius:32,backgroundImage:NetworkImage("${items[position].url}")),
-                  title:Text('${items[position].txt}',style:TextStyle(fontSize:24,color:Colors.red)),
-                  subtitle:Text('${items[position].lat}',style:TextStyle(fontSize:18,fontStyle:FontStyle.italic)),
-                ),
-              ],
-            );
+          itemBuilder:(context, pos) {
+            return Stack(alignment: AlignmentDirectional.bottomStart, children: <Widget>[
+              Container(height: 250, child: _buildMap(pos)),
+              Padding(padding: EdgeInsets.all(16),child: Stack(alignment: AlignmentDirectional.centerStart,children: <Widget>[
+              Card(shape:StadiumBorder(),
+                  child:Container(width:double.infinity,child: Padding(padding:EdgeInsets.only(left:88,right:16,top:16,bottom:16),child:Text('${items[pos].txt}',
+                      style:TextStyle(fontSize:24,color:Colors.indigo))))),
+              GestureDetector(child: CircleAvatar(radius:42,backgroundImage:NetworkImage("${items[pos].url}")),
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) {
+                    return Scaffold(appBar:AppBar(title:Text("${items[pos].txt}")), body:Image.network("${items[pos].url}",
+                    fit: BoxFit.cover, height: double.infinity, width: double.infinity,));
+                  }));
+                },),
+              ],),)
+            ],);
           }),
+      floatingActionButton:FloatingActionButton(backgroundColor:Colors.blue,child:Icon(Icons.location_on),onPressed:showMap)
     );
   }
 
   void _onNoteAdded(Event event) {
     setState(() {
-      items.add(Note.fromSnapshot(event.snapshot));
+      items.add(Loc.fromSnapshot(event.snapshot));
     });
+  }
+
+  void showMap() {
+    Navigator.push(context, MaterialPageRoute(builder: (_) {
+     return Scaffold(
+         appBar:AppBar(automaticallyImplyLeading: false,title:Text('Select location')),
+         body: _buildMap(-1),
+         floatingActionButton:Row(mainAxisSize: MainAxisSize.min, children: [
+           Container(
+             margin: EdgeInsets.symmetric(horizontal: 8.0),
+             child: RawMaterialButton(
+               fillColor: Colors.yellow, splashColor: Colors.yellowAccent,
+               child: Padding(padding:EdgeInsets.all(12.0),
+                   child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[Icon(Icons.arrow_back),Text("Back")])),
+               onPressed: () {Navigator.pop(context);},
+               shape: const StadiumBorder(),),),
+           FloatingActionButton(backgroundColor: Colors.blue, child: Icon(Icons.location_on,), onPressed: _getLoc,),
+           Container(
+             margin: EdgeInsets.symmetric(horizontal: 8.0),
+             child: RawMaterialButton(
+               fillColor: Colors.yellow, splashColor: Colors.yellowAccent,
+               child: Padding(padding:EdgeInsets.all(12.0),
+                   child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[Text("Next"), Icon(Icons.arrow_forward,)])),
+               onPressed: _getImg,
+               shape: const StadiumBorder(),),),
+         ]),
+         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat
+     );
+    }));
   }
 
   void _checkIn(String u, double lt, double ln)async{
@@ -115,9 +142,9 @@ class St extends State<SW> {
   }
 }
 
-class Note {
+class Loc {
   String id,txt,url;double lat,lng;
-  Note(this.id,this.txt,this.url);
-  Note.map(dynamic o) {this.id=o['id'];this.txt=o['txt'];this.url=o['url'];this.lat=o['lat'];this.lng=o['lng'];}
-  Note.fromSnapshot(DataSnapshot s) {id=s.key;txt=s.value['txt'];lat=s.value['lat'];lng=s.value['lng'];url=s.value['url'];}
+  Loc(this.id,this.txt,this.url);
+  Loc.map(dynamic o) {this.id=o['id'];this.txt=o['txt'];this.url=o['url'];this.lat=o['lat'];this.lng=o['lng'];}
+  Loc.fromSnapshot(DataSnapshot s) {id=s.key;txt=s.value['txt'];lat=s.value['lat'];lng=s.value['lng'];url=s.value['url'];}
 }
