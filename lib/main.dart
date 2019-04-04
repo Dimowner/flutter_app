@@ -25,6 +25,7 @@ Future img() async {
   if(f!=null){Im.Image im=Im.decodeImage(Io.File(f.path).readAsBytesSync());Im.Image th=Im.copyResize(im,900);Io.File(f.path)..writeAsBytesSync(Im.encodePng(th));}
   var u=await(await sr.child(Random().nextInt(10000).toString()+".jpeg").putFile(f,StorageMetadata(contentType:"image/jpeg")).onComplete).ref.getDownloadURL();
   r.push().set({'txt':t.text,'url':u,'lat':lt,'lng':ln});Navigator.pop(context);
+  t.clear();
 }
 Future loc() async{
   var l=await Location().getLocation();lt=l["latitude"];ln=l["longitude"];
@@ -40,7 +41,9 @@ Widget map(int p){
 Widget ls(BuildContext c){
   return Scaffold(backgroundColor:Colors.blue[600],body:ListView.builder(itemCount:it.length,itemBuilder:(c,pos){
   return Stack(alignment:AlignmentDirectional.bottomStart,children:<Widget>[Padding(padding:EdgeInsets.all(12),child:Stack(alignment:AlignmentDirectional.centerStart,children:<Widget>[
-  GestureDetector( onTap:(){Navigator.push(c,MaterialPageRoute(builder:(_){return map(pos);}));},child:Card(color: Colors.lightBlue,shape:StadiumBorder(),child:Container(width:double.infinity,child:Padding(padding:EdgeInsets.only(left:80,right:16,top:16,bottom:16),child:Text('${it[pos].txt}', style:TextStyle(fontSize:20,color:Colors.white)))))),
+  GestureDetector(onTap:(){Navigator.push(c,MaterialPageRoute(builder:(_){return map(pos);}));},
+    child:Card(color:Colors.lightBlue,shape:StadiumBorder(),child:Container(width:double.infinity,
+    child:Padding(padding:EdgeInsets.only(left:80,right:16,top:16,bottom:16),child:Text('${it[pos].txt}', style:TextStyle(fontSize:20,color:Colors.white)))))),
   GestureDetector(child:CircleAvatar(radius:36,backgroundImage:NetworkImage("${it[pos].url}")),onTap:(){Navigator.push(c,MaterialPageRoute(builder:(_){
   return Scaffold(appBar:AppBar(title:Text("${it[pos].txt}")),body:Image.network("${it[pos].url}",fit:BoxFit.cover,height:double.infinity,width:double.infinity));}));})]))]);}),
   floatingActionButton:FloatingActionButton(backgroundColor:Colors.green,child:Icon(Icons.location_on),onPressed:nw));
@@ -48,10 +51,13 @@ Widget ls(BuildContext c){
 void nw(){
   Navigator.push(context, MaterialPageRoute(builder:(_){return Scaffold(
   appBar:AppBar(automaticallyImplyLeading:false,title:Text('Check-in')),body:Stack(alignment:AlignmentDirectional.bottomStart,children:<Widget>[map(-1),
-  Container(height:150,decoration:BoxDecoration(color:Colors.grey[200]),child:Padding(padding:EdgeInsets.only(left:16,right:16),child:TextField(controller:t,decoration:InputDecoration(labelText:'Impression'))))]),floatingActionButton:Row(mainAxisSize:MainAxisSize.min,children:[
-  Container(margin:EdgeInsets.symmetric(horizontal:24),child:RawMaterialButton(fillColor:Colors.yellow,splashColor:Colors.yellow,child:Padding(padding:EdgeInsets.all(12),child:Row(children:<Widget>[Icon(Icons.arrow_back),Text("Back")])),onPressed:(){Navigator.pop(context);},shape:StadiumBorder())),
+  Container(height:150,decoration:BoxDecoration(color:Colors.grey[200]),child:Padding(padding:EdgeInsets.only(left:16,right:16),
+    child:TextField(controller:t,decoration:InputDecoration(labelText:'Impression'))))]),floatingActionButton:Row(mainAxisSize:MainAxisSize.min,children:[
+  Container(margin:EdgeInsets.symmetric(horizontal:24),child:RawMaterialButton(fillColor:Colors.yellow,splashColor:Colors.yellow,
+    child:Padding(padding:EdgeInsets.all(12),child:Row(children:<Widget>[Icon(Icons.arrow_back),Text("Back")])),onPressed:(){Navigator.pop(context);},shape:StadiumBorder())),
   FloatingActionButton(child:Icon(Icons.location_on),onPressed:loc),
-  Container(margin:EdgeInsets.symmetric(horizontal:24),child:RawMaterialButton(fillColor:Colors.yellow,splashColor:Colors.yellow,child:Padding(padding:EdgeInsets.all(12),child:Row(children:<Widget>[Text("Next"),Icon(Icons.arrow_forward)])), onPressed:img,shape:StadiumBorder())),
+  Container(margin:EdgeInsets.symmetric(horizontal:24),child:RawMaterialButton(fillColor:Colors.yellow,splashColor:Colors.yellow,
+    child:Padding(padding:EdgeInsets.all(12),child:Row(children:<Widget>[Text("Next"),Icon(Icons.arrow_forward)])), onPressed:img,shape:StadiumBorder())),
   ]),floatingActionButtonLocation:FloatingActionButtonLocation.centerFloat);}));
 }
 }
