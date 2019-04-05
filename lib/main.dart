@@ -30,21 +30,21 @@ Future img() async {
 Future loc() async{
   var l=await Location().getLocation();lt=l["latitude"];ln=l["longitude"];
   setState((){m.clear();m[MarkerId("id$d")]=Marker(markerId:MarkerId("id$d"),position:LatLng(lt,ln));});
-  d++;ct.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(zoom:12,target:LatLng(lt,ln))));
+  d++;ct.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(zoom:14,target:LatLng(lt,ln))));
 }
 @override void dispose(){sb.cancel();super.dispose();}
-@override Widget build(BuildContext c){return MaterialApp(home:Scaffold(appBar:AppBar(title:Text('Check-in')),body:ls(c)));}
+@override Widget build(BuildContext c){return MaterialApp(home:Scaffold(appBar:AppBar(title:Text('Share Place')),body:ls(c)));}
 Widget map(int p){
   var ll=LatLng(37.422,-122.08);if(p>=0){ll=LatLng(it[p].lat,it[p].lng);m[MarkerId("id$d")]=Marker(markerId:MarkerId("id$d"),position:ll);}
-  d++;return GoogleMap(scrollGesturesEnabled:true,zoomGesturesEnabled:true,onMapCreated:(c){ct=c;},markers:Set<Marker>.of(m.values),initialCameraPosition:CameraPosition(target:ll,zoom:12));
+  d++;return GoogleMap(scrollGesturesEnabled:true,zoomGesturesEnabled:true,onMapCreated:(c){ct=c;},markers:Set<Marker>.of(m.values),initialCameraPosition:CameraPosition(target:ll,zoom:14));
 }
 Widget ls(BuildContext c){
   return Scaffold(backgroundColor:Colors.blue[600],body:ListView.builder(itemCount:it.length,itemBuilder:(c,pos){
   return Stack(alignment:AlignmentDirectional.bottomStart,children:<Widget>[Padding(padding:EdgeInsets.all(12),child:Stack(alignment:AlignmentDirectional.centerStart,children:<Widget>[
   GestureDetector(onTap:(){Navigator.push(c,MaterialPageRoute(builder:(_){return map(pos);}));},
-    child:Card(color:Colors.lightBlue,shape:StadiumBorder(),child:Container(width:double.infinity,
-    child:Padding(padding:EdgeInsets.only(left:80,right:16,top:16,bottom:16),child:Text('${it[pos].txt}', style:TextStyle(fontSize:20,color:Colors.white)))))),
-  GestureDetector(child:CircleAvatar(radius:36,backgroundImage:NetworkImage("${it[pos].url}")),onTap:(){Navigator.push(c,MaterialPageRoute(builder:(_){
+    child:Card(color:Colors.blue,shape:StadiumBorder(),child:Container(width:double.infinity,
+    child:Padding(padding:EdgeInsets.only(left:72,right:16,top:16,bottom:16),child:Text('${it[pos].txt}', style:TextStyle(fontSize:18,color:Colors.white)))))),
+  GestureDetector(child:CircleAvatar(radius:32,backgroundImage:NetworkImage("${it[pos].url}")),onTap:(){Navigator.push(c,MaterialPageRoute(builder:(_){
   return Scaffold(appBar:AppBar(title:Text("${it[pos].txt}")),body:Image.network("${it[pos].url}",fit:BoxFit.cover,height:double.infinity,width:double.infinity));}));})]))]);}),
   floatingActionButton:FloatingActionButton(backgroundColor:Colors.green,child:Icon(Icons.location_on),onPressed:nw));
 }
