@@ -13,7 +13,7 @@
 
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="flutter_app"
+        android:label="Share Place"
         android:icon="@mipmap/flutter_app_logo">
         <activity
             android:name=".MainActivity"
