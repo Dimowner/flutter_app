@@ -18,3 +18,6 @@ Unfortunately I didn't found a way how to do this programmatically, because all 
 To make valid Google Map API key for all who build this project, 'debug.keystore' file was included into project.</br>
 This keystore signs the debug and release builds by default.
 </p>
+<p>
+Project created with Android Studio 3.3.2 targeting Android platform.
+</p>
