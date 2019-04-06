@@ -16,12 +16,12 @@ List<L>it;StreamSubscription<Event>sb;
 final r=FirebaseDatabase.instance.reference().child('r');
 final sr=FirebaseStorage.instance.ref();
 TextEditingController t;
-double lt,ln;int d=1;
+double lt=37.422,ln=-122.08;int d=1;
 Map<MarkerId,Marker>m=<MarkerId,Marker>{};GoogleMapController ct;
 
 @override void initState(){super.initState();it=List();sb=r.onChildAdded.listen((e){setState((){it.insert(0,L.fromSnapshot(e.snapshot));});});t=TextEditingController();}
 Future img()async{
-  Navigator.pop(context);var f=await ImagePicker.pickImage(source:ImageSource.camera);
+  var f=await ImagePicker.pickImage(source:ImageSource.camera);Navigator.pop(context);
   if(f!=null){Im.Image im=Im.decodeImage(Io.File(f.path).readAsBytesSync());Im.Image th=Im.copyResize(im,900);Io.File(f.path)..writeAsBytesSync(Im.encodePng(th));}
   var u=await(await sr.child(Random().nextInt(10000).toString()+".jpeg").putFile(f,StorageMetadata(contentType:"image/jpeg")).onComplete).ref.getDownloadURL();
   r.push().set({'txt':t.text,'url':u,'lat':lt,'lng':ln});
@@ -35,7 +35,7 @@ Future loc() async{
 @override void dispose(){sb.cancel();super.dispose();}
 @override Widget build(BuildContext c){return MaterialApp(home:Scaffold(appBar:AppBar(title:Text('Share Place')),body:ls(c)));}
 Widget map(int p){
-  var ll=LatLng(37.422,-122.08);if(p>=0){ll=LatLng(it[p].lat,it[p].lng);m[MarkerId("id$d")]=Marker(markerId:MarkerId("id$d"),position:ll);}
+  var ll=LatLng(lt,ln);if(p>=0){ll=LatLng(it[p].lat,it[p].lng);m[MarkerId("id$d")]=Marker(markerId:MarkerId("id$d"),position:ll);}
   d++;return GoogleMap(scrollGesturesEnabled:true,zoomGesturesEnabled:true,onMapCreated:(c){ct=c;},markers:Set<Marker>.of(m.values),initialCameraPosition:CameraPosition(target:ll,zoom:14));
 }
 Widget ls(BuildContext c){
